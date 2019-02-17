@@ -27,14 +27,14 @@ LUFA_CORE_OBJS			=	$(LUFA_CORE_FILES:=.o)
 LUFA_CORE_ARCH_OBJS		=	$(LUFA_CORE_ARCH_FILES:=.o)
 LUFA_OBJS				=	$(LUFA_CORE_OBJS) $(LUFA_CORE_ARCH_OBJS) $(LUFA_HID_DEVICE_OBJS)
 
-CARGS	=	-Wall -Os -DF_CPU=$(F_CPU) -DF_USB=$(F_USB) -I$(LUFA_PATH) -include $(LUFA_CONFIG)
-TTY		=	ttyACM0
+CARGS	=	-Wall -Wextra -Os -DF_CPU=$(F_CPU) -DF_USB=$(F_USB) -I$(LUFA_PATH) -include $(LUFA_CONFIG)
+TTY		=	ttyACM1
 
 
-$(OBJS):%.o: %.cpp
+$(OBJS):%.o: %.cpp %.hpp
 	avr-g++ $(CARGS) -std=c++11 -mmcu=$(MCU) -c $<
 
-$(COBJS):%.o: %.c
+$(COBJS):%.o: %.c %.h
 	avr-gcc $(CARGS) -std=c11 -mmcu=$(MCU) -c $<
 
 $(LUFA_CORE_OBJS):%.o: $(addprefix $(LUFA_CORE), %.c)
@@ -47,13 +47,13 @@ $(LUFA_HID_DEVICE_OBJS):%.o: $(addprefix $(LUFA_DEVICE), %.c)
 	avr-g++ $(CARGS) -fpermissive -mmcu=$(MCU) -c $<
 
 $(MAIN).elf: $(LUFA_OBJS) $(OBJS) $(COBJS)
-	avr-g++ -mmcu=$(MCU) -o $(FILE).elf $(OBJS) $(COBJS) $(LUFA_OBJS)
+	avr-g++ -mmcu=$(MCU) -o $(MAIN).elf $(OBJS) $(COBJS) $(LUFA_OBJS)
 
 $(MAIN).hex: $(MAIN).elf
-	avr-objcopy -O ihex -R .eeprom $(FILE).elf $(FILE).hex
+	avr-objcopy -O ihex -R .eeprom $(MAIN).elf $(MAIN).hex
 
 upload: $(MAIN).hex
-	avrdude -p$(MCU) -P/dev/$(TTY) -cavr109 -b57600 -Uflash:w:$(FILE).hex
+	avrdude -p$(MCU) -P/dev/$(TTY) -cavr109 -b57600 -Uflash:w:$(MAIN).hex
 
 clean:
 	rm -f $(LUFA_OBJS) $(OBJS) $(COBJS) $(MAIN).elf $(MAIN).hex
