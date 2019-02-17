@@ -184,6 +184,14 @@ void EVENT_USB_Device_StartOfFrame(void){
 	HID_Device_MillisecondElapsed(&DS2_HID_Interface);
 }
 
+inline char deadzone(char input){
+	const unsigned char range = 10, middle = 128;
+	if(input < (middle - range) && input > ((char)middle + range)){
+		return input;
+	}
+	return middle;
+}
+
 bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDInterfaceInfo,
 	uint8_t* const ReportID,
 	const uint8_t ReportType,
@@ -195,10 +203,10 @@ bool CALLBACK_HID_Device_CreateHIDReport(USB_ClassInfo_HID_Device_t* const HIDIn
 	S_Data data = {};
 	read_DS2(&data);
 
-	report->joyr_x = data.joyr_x;
-	report->joyr_y = data.joyr_y;
-	report->joyl_x = data.joyl_x;
-	report->joyl_y = data.joyl_y;
+	report->joyr_x = deadzone(data.joyr_x);
+	report->joyr_y = deadzone(data.joyr_y);
+	report->joyl_x = deadzone(data.joyl_x);
+	report->joyl_y = deadzone(data.joyl_y);
 	// convert hat switch presses to angles
 	report->hat = ang_DP[data.hat & 0x0F];
 
